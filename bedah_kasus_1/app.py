@@ -15,11 +15,35 @@ def format_rupiah_singkat(n):
     else:
         return f"Rp {n:,.0f}"
 
+from pathlib import Path
+
 # ================= LOAD DATA =================
+BASE_DIR = Path(__file__).resolve().parent
+
 @st.cache_data
 def load_data():
-    df = pd.read_csv("data_penjualan_sintesis.csv", parse_dates=["Tanggal"])
+    file_path = BASE_DIR / "data_penjualan_sintesis.csv"
+
+    # Cek apakah file tersedia
+    if not file_path.exists():
+        st.error("Dataset tidak ditemukan!")
+        st.write("Lokasi pencarian:", str(file_path))
+        st.write("File yang tersedia:")
+
+        for file in BASE_DIR.iterdir():
+            st.write(file.name)
+
+        st.stop()
+
+    # Membaca dataset
+    df = pd.read_csv(file_path)
+
+    # Konversi tanggal
+    df["Tanggal"] = pd.to_datetime(df["Tanggal"], errors="coerce")
+
+    # Perhitungan pendapatan
     df["Total_Penjualan"] = df["Harga"] * df["Jumlah_Terjual"]
+
     return df
 
 df = load_data()
